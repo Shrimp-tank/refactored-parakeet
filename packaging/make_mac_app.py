@@ -4,7 +4,6 @@ from __future__ import annotations
 import re
 import shutil
 import stat
-import venv
 from pathlib import Path
 
 
@@ -15,30 +14,6 @@ CONTENTS = DIST_DIR / APP_NAME / "Contents"
 MACOS = CONTENTS / "MacOS"
 RESOURCES = CONTENTS / "Resources"
 APP_RESOURCES = RESOURCES / "app"
-EMBEDDED_PYTHON = RESOURCES / "python"
-
-
-def _create_python_runtime() -> Path:
-    """Bundle a standalone Python interpreter inside the app."""
-
-    if EMBEDDED_PYTHON.exists():
-        shutil.rmtree(EMBEDDED_PYTHON)
-
-    builder = venv.EnvBuilder(with_pip=False, symlinks=False)
-    builder.create(EMBEDDED_PYTHON)
-
-    bin_dir = EMBEDDED_PYTHON / "bin"
-    for name in ("python3", "python"):
-        candidate = bin_dir / name
-        if candidate.exists():
-            return candidate
-
-    # Fall back to python3.x style names created by some distributors.
-    for candidate in sorted(bin_dir.glob("python3.*")):
-        if candidate.is_file():
-            return candidate
-
-    raise SystemExit("Unable to locate the embedded python interpreter")
 
 
 def _read_version() -> str:
@@ -79,19 +54,15 @@ runpy.run_module("serato_rekordbox_sync.gui", run_name="__main__")
 """.strip()
     _write_file(launcher, launcher_code)
 
-    python_executable = _create_python_runtime()
-
     executable = MACOS / "serato-rekordbox-sync"
     exec_script = """
 #!/bin/bash
 set -e
 APP_DIR="$(cd \"$(dirname \"$0\")/..\" && pwd)"
 APP_PY="$APP_DIR/Resources/app"
-PYTHON_BIN="$APP_DIR/Resources/python/bin/PYTHON_BIN_PLACEHOLDER"
 export PYTHONPATH="$APP_PY"
-exec "$PYTHON_BIN" "$APP_PY/launch.py"
-""".strip() + "\n"
-    exec_script = exec_script.replace("PYTHON_BIN_PLACEHOLDER", python_executable.name)
+exec /usr/bin/env python3 "$APP_PY/launch.py"
+""".strip()
     MACOS.mkdir(parents=True, exist_ok=True)
     _write_file(
         executable,
