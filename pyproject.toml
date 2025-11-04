@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "serato-rekordbox-sync"
+version = "0.2.0"
+description = "Convert Serato crate files into Rekordbox XML playlists"
+authors = [{name = "Codex User"}]
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["serato", "rekordbox", "dj", "playlists"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.scripts]
+serato-rekordbox-sync = "serato_rekordbox_sync.cli:main"
+serato-rekordbox-sync-gui = "serato_rekordbox_sync.gui:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
